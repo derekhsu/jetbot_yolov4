@@ -12,7 +12,7 @@ import time
 ```
 
 
-> - 控制動作 / 方向
+- 控制動作 / 方向
 
 ```
 robot = Robot()
