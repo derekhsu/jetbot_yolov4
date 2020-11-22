@@ -4,6 +4,7 @@
 > 1. 下載及燒錄 image
 >   - 我用的是 4GB 的版本
 >   - 簡單判斷 2GB 或 4GB 的方式：看充電的接頭是 micro USB 的是 for Jetson Nano (4GB), 或是 USB-C (for Jetson Nano 2GB)   
+
 |Platform	|JetPack Version	|JetBot Version	|Download|
 |:------------- |:-------------|:-----|:-----|
 |Jetson Nano (4GB)	|4.4.1	|0.4.2	|[jetbot-042_nano-4gb-jp441.zip](https://drive.google.com/file/d/1MAX1ibJvcLulKQeMtxbjMhsrOevBfUJd/view)|
