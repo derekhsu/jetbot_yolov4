@@ -9,15 +9,12 @@
 |Jetson Nano (4GB)	|4.4.1	|0.4.2	|[jetbot-042_nano-4gb-jp441.zip](https://drive.google.com/file/d/1MAX1ibJvcLulKQeMtxbjMhsrOevBfUJd/view)|
 > 2. 如果開機時進入的是 command line 模式, 可以參考以下指令, 進入 GUI 模式 https://imadelhanafi.com/posts/jetson_nano_setup/
 因為, 待會兒的 examples 程式之一 teleoperation 需要用到遊戲手把 🎮 控制器, 我在 Mac 上操作 notebook 時有問題, 只有在 Jetbot 上直接執行時才 okay.
-
 ```
 # disable GUI on boot
 # After applying this command, the next time you reboot it will be on terminal mode
 $ sudo systemctl set-default multi-user.target
-
 # To enable GUI again
 $ sudo systemctl set-default graphical.target
-
 ```
 > 3. login 的 id 跟 password 都是 jetbot
 > 4. 設定 wifi 的 command line 指令, 要記得 reboot 才能生效
