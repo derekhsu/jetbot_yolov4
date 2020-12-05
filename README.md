@@ -29,7 +29,10 @@ pip3 install Cython
 pip3 install numpy torch-1.7.0-cp36-cp36m-linux_aarch64.whl
 ```
 
-
+Install libcanberra-gtk-module
+```
+sudo apt install libcanberra-gtk-module libcanberra-gtk3-module
+```
 
 ### Method 2
 
