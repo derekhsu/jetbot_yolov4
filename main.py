@@ -91,6 +91,7 @@ turn_gain = 0.3
 center = None
 
 bypass_number = 0
+found_number = 0
 barrier_center = -1
 try:
     while(True):
@@ -163,8 +164,9 @@ try:
             bypass_number -= 1
             continue 
 
-        if len(target_boxes) == 0 and center != None:
+        if len(target_boxes) == 0 and center != None and found_number == 0:
             print("barrier_center:", barrier_center)
+            
             if barrier_center == -1:
                 print("In tracing modei, center: ", center[0])
                 if center[0] >= 0:
@@ -188,7 +190,7 @@ try:
             r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
             cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
             continue
-        elif len(target_boxes) == 0 and center == None:
+        elif len(target_boxes) == 0 and center == None and found_number == 0:
             robot.stop()
             cv2.imshow('Video Capture', img)
             r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
@@ -196,13 +198,21 @@ try:
             continue
 
         #Stop condition checking
-        target_fit = (target_boxes[0][2] - target_boxes[0][0]) / 416
-        print("Target fit: %f"% target_fit)
-        if target_fit > 0.5:
-            robot.stop()
-            cv2.imshow('Video Capture', img)
-            r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
-            cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
+        if len(target_boxes) > 0:
+            target_fit = (target_boxes[0][2] - target_boxes[0][0]) / 416
+            print("Target fit: %f"% target_fit)
+            if target_fit > 0.35:
+                print("Target is found")
+                found_number = 10
+                robot.stop()
+                cv2.imshow('Video Capture', img)
+                r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
+                cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
+                continue
+        else:
+            if found_number > 0:
+                found_number -= 1
+                print("found_nubmer:", found_number)
             continue
 
         center = detect_center(target_boxes)
