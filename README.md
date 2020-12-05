@@ -34,6 +34,10 @@ Install libcanberra-gtk-module
 sudo apt install libcanberra-gtk-module libcanberra-gtk3-module
 ```
 
+Create swap, refer to the link below:
+
+https://chtseng.wordpress.com/2019/05/01/nvida-jetson-nano-%E5%88%9D%E9%AB%94%E9%A9%97%EF%BC%9A%E5%AE%89%E8%A3%9D%E8%88%87%E6%B8%AC%E8%A9%A6/
+
 ### Method 2
 
 ## Model Training
