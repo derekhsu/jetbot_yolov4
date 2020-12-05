@@ -1,5 +1,41 @@
 # Project
 
+## Prepare image
+
+### Method 1
+
+Download the latest image from the link below according to your type of Jetson Nano and burn it into a SD card. 
+
+https://jetbot.org/master/software_setup/sd_card.html
+
+Install dependencies
+
+```
+sudo apt install libffi-dev
+sudo pip3 install ipywidgets
+sudo pip3 install traitlets
+cd ~/jetbot
+sudo python3 setup.py install
+```
+
+You need install Pytorch in order to run jetbot module, the instrution can be refer to https://forums.developer.nvidia.com/t/pytorch-for-jetson-version-1-7-0-now-available/72048.
+
+Download Pytorch whl file according to your jetpack version. The script listed below installs for JetPack version 4.4.1
+
+```
+wget https://nvidia.box.com/shared/static/9eptse6jyly1ggt9axbja2yrmj6pbarc.whl -O torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+sudo apt-get install python3-pip libopenblas-base libopenmpi-dev 
+pip3 install Cython
+pip3 install numpy torch-1.7.0-cp36-cp36m-linux_aarch64.whl
+```
+
+Install libcanberra-gtk-module
+```
+sudo apt install libcanberra-gtk-module libcanberra-gtk3-module
+```
+
+### Method 2
+
 ## Model Training
 
 ## Car Deploying
