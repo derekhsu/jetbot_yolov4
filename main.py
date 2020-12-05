@@ -1,3 +1,4 @@
+import os
 import cv2
 import subprocess
 from utils.visualization import BBoxVisualization
@@ -6,10 +7,14 @@ import pycuda.autoinit
 import time, queue, threading
 from utils.yolo_classes import get_cls_dict
 import numpy as np
-
+from datetime import datetime
 from jetbot import Robot
 
 robot = Robot()
+
+image_root = os.path.join("Pictures", datetime.utcnow().strftime('%Y%m%d%H%M%S'))
+
+os.makedirs(image_root)
 
 # bufferless VideoCapture
 class VideoCapture:
@@ -180,10 +185,14 @@ try:
             robot.stop()
             time.sleep(0.2)
             cv2.imshow('Video Capture', img)
+            r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
+            cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
             continue
         elif len(target_boxes) == 0 and center == None:
             robot.stop()
             cv2.imshow('Video Capture', img)
+            r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
+            cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
             continue
 
         #Stop condition checking
@@ -192,6 +201,8 @@ try:
         if target_fit > 0.5:
             robot.stop()
             cv2.imshow('Video Capture', img)
+            r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
+            cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
             continue
 
         center = detect_center(target_boxes)
@@ -216,6 +227,7 @@ try:
  
         # Display the resulting image
         cv2.imshow('Video Capture', r_img)
+        cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
         if cv2.waitKey(1) & 0xFF == ord('q'):  # press q to quit
             break
 except Exception as e:
