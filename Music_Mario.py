@@ -5,6 +5,11 @@ GPIO.setmode(GPIO.BOARD)  # Set Jetson Nano to use pin number when referencing G
 
 GPIO.setup(33, GPIO.OUT)  # Set GPIO pin 33 (PWM2) to output mode, pin 32 is PWM1.
 
+current_val = GPIO.HIGH
+GPIO.setup(11, GPIO.OUT, initial=GPIO.HIGH)     # Set GPIO pin 11 for LED1 (RED)
+GPIO.setup(13, GPIO.OUT, initial=GPIO.HIGH)     # Set GPIO pin 13 for LED2 (GREEN)
+GPIO.setup(15, GPIO.OUT, initial=GPIO.HIGH)     # Set GPIO pin 15 for LED3 (BLUE)
+
 pwm = GPIO.PWM(33, 5000) 
 pwm.start(0)
 
@@ -120,8 +125,12 @@ for i in mario_tones:
     else:
         pwm.ChangeFrequency(i) 
         pwm.ChangeDutyCycle(30)
-
+        GPIO.output(11, current_val)
+        GPIO.output(13, current_val)
+        GPIO.output(15, current_val)
+        current_val ^= GPIO.HIGH
     time.sleep(0.150)
 
 pwm.stop()                         # stop PWM
 GPIO.cleanup()                     # resets GPIO ports used back to input mode
+
