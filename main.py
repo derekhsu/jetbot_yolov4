@@ -16,6 +16,108 @@ image_root = os.path.join("Pictures", datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
 os.makedirs(image_root)
 
+
+
+import RPi.GPIO as GPIO
+#import time
+
+GPIO.setmode(GPIO.BOARD)  # Set Jetson Nano to use pin number when referencing GPIO pins.
+
+GPIO.setup(33, GPIO.OUT)  # Set GPIO pin 33 (PWM2) to output mode, pin 32 is PWM1.
+
+pwm = GPIO.PWM(33, 5000)
+
+# define frequency for each tone
+B0  = 31
+C1  = 33
+CS1 = 35
+D1  = 37
+DS1 = 39
+E1  = 41
+F1  = 44
+FS1 = 46
+G1  = 49
+GS1 = 52
+A1  = 55
+AS1 = 58
+B1  = 62
+C2  = 65
+CS2 = 69
+D2  = 73
+DS2 = 78
+E2  = 82
+F2  = 87
+FS2 = 93
+G2  = 98
+GS2 = 104
+A2  = 110
+AS2 = 117
+B2  = 123
+C3  = 131
+CS3 = 139
+D3  = 147
+DS3 = 156
+E3  = 165
+F3  = 175
+FS3 = 185
+G3  = 196
+GS3 = 208
+A3  = 220
+AS3 = 233
+B3  = 247
+C4  = 262
+CS4 = 277
+D4  = 294
+DS4 = 311
+E4  = 330
+F4  = 349
+FS4 = 370
+G4  = 392
+GS4 = 415
+A4  = 440
+AS4 = 466
+B4  = 494
+C5  = 523
+CS5 = 554
+D5  = 587
+DS5 = 622
+E5  = 659
+F5  = 698
+FS5 = 740
+G5  = 784
+GS5 = 831
+A5  = 880
+AS5 = 932
+B5  = 988
+C6  = 1047
+CS6 = 1109
+D6  = 1175
+DS6 = 1245
+E6  = 1319
+F6  = 1397
+FS6 = 1480
+G6  = 1568
+GS6 = 1661
+A6  = 1760
+AS6 = 1865
+B6  = 1976
+C7  = 2093
+CS7 = 2217
+D7  = 2349
+DS7 = 2489
+E7  = 2637
+F7  = 2794
+FS7 = 2960
+G7  = 3136
+GS7 = 3322
+A7  = 3520
+AS7 = 3729
+B7  = 3951
+C8  = 4186
+CS8 = 4435
+D8  = 4699
+DS8 = 4978
+
 # bufferless VideoCapture
 class VideoCapture:
 
@@ -41,6 +143,40 @@ class VideoCapture:
 
   def read(self):
     return self.q.get()
+
+class MusicPlayer:
+
+    def __init__(self, init_speed=0.1):
+        #t = threading.Thread(target=self._play)
+        #t.daemon = True
+        self.speed = init_speed
+        print("Start to play music")
+        #t.start()
+
+    def _play(self):
+        print("Play music")
+        pac_man = [B3, 0, B4, 0, FS4, 0, DS4, 0, B4, FS4, B3, 0,
+           DS4, 0, 0, 0, C4, 0, C5, 0, G4, 0, E4, 0,
+           C5, G4, C4, 0, E4, 0, 0, 0, B3, 0, B3, 0,
+           FS3, 0, DS4, 0, B4, FS4, B3, 0, DS4, 0, 0, 0,
+           DS4, E4, F4, 0, F4, FS4, G4, 0, G4, GS4,
+           A4, 0, B4, 0, 0, 0]
+
+        #while True:
+        pwm.start(0)
+        for i in pac_man:
+            if i == 0:
+                pwm.ChangeDutyCycle(0)
+            else:
+                pwm.ChangeFrequency(i)
+        
+            pwm.ChangeDutyCycle(30)
+
+            time.sleep(self.speed)
+        pwm.stop()
+
+    def set_speed(self, speed):
+        self.speed = speed
 
 gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
 
@@ -93,6 +229,9 @@ center = None
 bypass_number = 0
 found_number = 0
 barrier_center = -1
+
+player = MusicPlayer()
+
 try:
     while(True):
 
@@ -140,7 +279,7 @@ try:
 
                 barrier_center = detect_center(np.array([largest_barrier_box]))
                 print("lagest_barrier_box_center:", barrier_center)
-                if abs(barrier_center[0] < 0.2) and largest_barrier_size > 416*0.3:
+                if abs(barrier_center[0]) < 0.2 and largest_barrier_size > 416*0.3:
                     bypass_number = 3
                     print("Bypassing barrier...")
                     if barrier_center[0] <= 0:
@@ -208,6 +347,7 @@ try:
                 cv2.imshow('Video Capture', img)
                 r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
                 cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
+                player._play()
                 continue
         else:
             if found_number > 0:
@@ -245,5 +385,10 @@ except Exception as e:
 
 # When everything done, release the capture
 robot.stop()
-cap.release()
 cv2.destroyAllWindows()
+try:
+    cap.release()
+except:
+    pass
+#pwm.stop()                         # stop PWM
+GPIO.cleanup()                     # resets GPIO ports used back to input mode
