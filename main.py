@@ -27,9 +27,15 @@ GPIO.setmode(GPIO.BOARD)  # Set Jetson Nano to use pin number when referencing G
 trig_output_pin = 13  #发射PIN，J41_BOARD_PIN13---gpio14/GPIO.B06/SPI2_SCK
 echo_input_pin = 15  #接收PIN，J41_BOARD_PIN18---gpio15/GPIO.B07/SPI2_CS0
 
-start_sonic_signal()
+LED_RED = 11
+LED_YELLOW = 31
+LED_GREEN = 35
 
 GPIO.setup(33, GPIO.OUT)  # Set GPIO pin 33 (PWM2) to output mode, pin 32 is PWM1.
+
+GPIO.setup(LED_RED, GPIO.OUT, initial=GPIO.HIGH)
+GPIO.setup(LED_YELLOW, GPIO.OUT, initial=GPIO.HIGH)
+GPIO.setup(LED_GREEN, GPIO.OUT, initial=GPIO.HIGH)
 
 pwm = GPIO.PWM(33, 5000)
 
@@ -124,6 +130,14 @@ CS8 = 4435
 D8  = 4699
 DS8 = 4978
 
+def light_on(light):
+    GPIO.output(light, GPIO.LOW)
+    if light != LED_RED:
+        GPIO.output(LED_RED, GPIO.HIGH)
+    if light != LED_YELLOW:
+        GPIO.output(LED_YELLOW, GPIO.HIGH)
+    if light != LED_GREEN:
+        GPIO.output(LED_GREEN, GPIO.HIGH)
 
 def start_sonic_signal():
 
@@ -144,10 +158,16 @@ def get_distance():
     GPIO.output(trig_output_pin, GPIO.HIGH)
     time.sleep(0.00001)
     GPIO.output(trig_output_pin, GPIO.LOW)
-
-    while GPIO.input(echo_input_pin)==0:
+    
+    stop_protect = 2000
+    while GPIO.input(echo_input_pin)==0 and stop_protect > 0:
+        #print("stop_protect:", stop_protect)
+        stop_protect -= 1
         pulse_start = time.time()
+    stop_protect = 2000
     while GPIO.input(echo_input_pin)==1:
+        #print("stop_protect:", stop_protect)
+        stop_protect -= 1
         pulse_end = time.time()
     pulse_duration = pulse_end - pulse_start
 
@@ -232,6 +252,8 @@ gst_elements = str(subprocess.check_output('gst-inspect-1.0'))
 width = 416
 height = 416
 
+start_sonic_signal()
+
 if 'nvcamerasrc' in gst_elements:
     # On versions of L4T prior to 28.1, you might need to add
     # 'flip-method=2' into gst_str below.
@@ -286,10 +308,13 @@ try:
 
         print("bypass_number: ", bypass_number)
         
-        if get_distance() < 20:
-            robot.backward()
-            robot.sleep(0.5)
+        distance = get_distance()
+        print("Distance detected by supersonic:", distance)
+        if distance != None and distance < 15:
+            robot.backward(0.35)
+            time.sleep(0.5)
             robot.stop()
+            continue
     
         # Capture frame-by-frame
         frame = cap.read()  # ret = 1 if the video is captured; frame is the image
@@ -335,6 +360,7 @@ try:
                 print("lagest_barrier_box_center:", barrier_center)
                 if abs(barrier_center[0]) < 0.2 and largest_barrier_size > 416*0.3:
                     bypass_number = 3
+                    light_on(LED_YELLOW)
                     print("Bypassing barrier...")
                     if barrier_center[0] <= 0:
                         robot.right(0.3)
@@ -357,11 +383,13 @@ try:
             bypass_number -= 1
             continue 
 
+
         if len(target_boxes) == 0 and center != None and found_number == 0:
             print("barrier_center:", barrier_center)
             
             if barrier_center == -1:
                 print("In tracing modei, center: ", center[0])
+                light_on(LED_GREEN)
                 if center[0] >= 0:
                     print("Turn right")
                     robot.right(0.4)
@@ -388,6 +416,7 @@ try:
             cv2.imshow('Video Capture', img)
             r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
             cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
+            light_on(LED_GREEN)
             continue
 
         #Stop condition checking
@@ -401,10 +430,12 @@ try:
                 cv2.imshow('Video Capture', img)
                 r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
                 cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
-                player._play()
                 continue
         else:
             if found_number > 0:
+                if found_number == 5:
+                    light_on(LED_RED)
+                    player._play()
                 found_number -= 1
                 print("found_nubmer:", found_number)
             continue
@@ -412,7 +443,7 @@ try:
         center = detect_center(target_boxes)
   
         print("Center: %f" % center[0])
-    
+        light_on(LED_GREEN)   
         if abs(center[0]) > 0.2:
             robot.set_motors(
                 float(speed + turn_gain * center[0]),
