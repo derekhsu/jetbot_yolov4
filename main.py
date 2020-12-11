@@ -23,6 +23,12 @@ import RPi.GPIO as GPIO
 
 GPIO.setmode(GPIO.BOARD)  # Set Jetson Nano to use pin number when referencing GPIO pins.
 
+# Pin Definitions
+trig_output_pin = 13  #发射PIN，J41_BOARD_PIN13---gpio14/GPIO.B06/SPI2_SCK
+echo_input_pin = 15  #接收PIN，J41_BOARD_PIN18---gpio15/GPIO.B07/SPI2_CS0
+
+start_sonic_signal()
+
 GPIO.setup(33, GPIO.OUT)  # Set GPIO pin 33 (PWM2) to output mode, pin 32 is PWM1.
 
 pwm = GPIO.PWM(33, 5000)
@@ -117,6 +123,49 @@ C8  = 4186
 CS8 = 4435
 D8  = 4699
 DS8 = 4978
+
+
+def start_sonic_signal():
+
+    GPIO.setup(trig_output_pin, GPIO.OUT, initial=GPIO.LOW)
+    GPIO.setup(echo_input_pin, GPIO.IN)
+    GPIO.output(trig_output_pin, GPIO.LOW)
+    time.sleep(0.002)
+    GPIO.output(trig_output_pin, GPIO.HIGH)
+    time.sleep(0.01)
+    GPIO.output(trig_output_pin, GPIO.LOW)
+
+def get_distance():
+    # Check distance from pulse
+    pulse_start = 0
+    pulse_end = 0
+
+    # sent a pulse to trig pin (10us width)
+    GPIO.output(trig_output_pin, GPIO.HIGH)
+    time.sleep(0.00001)
+    GPIO.output(trig_output_pin, GPIO.LOW)
+
+    while GPIO.input(echo_input_pin)==0:
+        pulse_start = time.time()
+    while GPIO.input(echo_input_pin)==1:
+        pulse_end = time.time()
+    pulse_duration = pulse_end - pulse_start
+
+    lis = []
+    count = 10
+    for i in range(count):
+        distance = pulse_duration * 17150
+        lis.append(distance)
+
+    min_value = 4.36 # aia 13F tempature and humid condition
+    distance = sum(lis) / count
+    distance = round(distance, 2)
+
+    if distance <= min_value or distance>400:
+        return None
+    else:
+        return distance
+
 
 # bufferless VideoCapture
 class VideoCapture:
@@ -236,6 +285,11 @@ try:
     while(True):
 
         print("bypass_number: ", bypass_number)
+        
+        if get_distance() < 20:
+            robot.backward()
+            robot.sleep(0.5)
+            robot.stop()
     
         # Capture frame-by-frame
         frame = cap.read()  # ret = 1 if the video is captured; frame is the image
