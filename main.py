@@ -300,6 +300,7 @@ center = None
 bypass_number = 0
 found_number = 0
 barrier_center = -1
+continue_found = 0
 
 player = MusicPlayer()
 
@@ -308,13 +309,13 @@ try:
 
         print("bypass_number: ", bypass_number)
         
-        distance = get_distance()
-        print("Distance detected by supersonic:", distance)
-        if distance != None and distance < 15:
-            robot.backward(0.35)
-            time.sleep(0.5)
-            robot.stop()
-            continue
+        #distance = get_distance()
+        #print("Distance detected by supersonic:", distance)
+        #if distance != None and distance < 15:
+        #    robot.backward(0.35)
+        #    time.sleep(0.5)
+        #    robot.stop()
+        #    continue
     
         # Capture frame-by-frame
         frame = cap.read()  # ret = 1 if the video is captured; frame is the image
@@ -323,7 +324,7 @@ try:
         img = cv2.flip(frame,1)   # flip left-right
         img = cv2.flip(img,0)     # flip up-down
 
-        boxes, confs, clss = trt_yolo.detect(img, 0.65)
+        boxes, confs, clss = trt_yolo.detect(img, 0.75)
         print("boxes:", boxes)
         print("confs:", confs)
         print("clss:", clss)
@@ -363,14 +364,14 @@ try:
                     light_on(LED_YELLOW)
                     print("Bypassing barrier...")
                     if barrier_center[0] <= 0:
-                        robot.right(0.3)
+                        robot.right(0.4)
                     else:
-                        robot.left(0.3)
+                        robot.left(0.4)
                     #robot.set_motors(
                     #    float(speed - turn_gain * barrier_center[0]),
                     #    float(speed + turn_gain * barrier_center[0])
                     #)  
-                    time.sleep(0.3)
+                    time.sleep(0.2)
                     robot.stop()
                     continue
                 
@@ -426,20 +427,23 @@ try:
             if target_fit > 0.35:
                 print("Target is found")
                 found_number = 10
+                continue_found += 1
                 robot.stop()
                 cv2.imshow('Video Capture', img)
                 r_img = vis.draw_bboxes(img.copy(), boxes, confs, clss)
                 cv2.imwrite(os.path.join(image_root, datetime.utcnow().strftime('%Y%m%d%H%M%S') + ".jpg"), r_img)
+                if continue_found >= 5:
+                    light_on(LED_RED)
+                    player._play()
+                    continue_found = 0
                 continue
         else:
             if found_number > 0:
-                if found_number == 5:
-                    light_on(LED_RED)
-                    player._play()
                 found_number -= 1
                 print("found_nubmer:", found_number)
             continue
-
+        
+        continue_found = 0
         center = detect_center(target_boxes)
   
         print("Center: %f" % center[0])
