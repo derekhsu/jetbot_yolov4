@@ -159,13 +159,13 @@ def get_distance():
     time.sleep(0.00001)
     GPIO.output(trig_output_pin, GPIO.LOW)
     
-    stop_protect = 2000
+    stop_protect = 3000
     while GPIO.input(echo_input_pin)==0 and stop_protect > 0:
         #print("stop_protect:", stop_protect)
         stop_protect -= 1
         pulse_start = time.time()
-    stop_protect = 2000
-    while GPIO.input(echo_input_pin)==1:
+    stop_protect = 3000
+    while GPIO.input(echo_input_pin)==1 and stop_protect > 0:
         #print("stop_protect:", stop_protect)
         stop_protect -= 1
         pulse_end = time.time()
@@ -309,13 +309,13 @@ try:
 
         print("bypass_number: ", bypass_number)
         
-        #distance = get_distance()
-        #print("Distance detected by supersonic:", distance)
-        #if distance != None and distance < 15:
-        #    robot.backward(0.35)
-        #    time.sleep(0.5)
-        #    robot.stop()
-        #    continue
+        distance = get_distance()
+        print("Distance detected by supersonic:", distance)
+        if distance != None and distance < 20:
+            robot.backward(0.35)
+            time.sleep(0.5)
+            robot.stop()
+            continue
     
         # Capture frame-by-frame
         frame = cap.read()  # ret = 1 if the video is captured; frame is the image
@@ -324,7 +324,7 @@ try:
         img = cv2.flip(frame,1)   # flip left-right
         img = cv2.flip(img,0)     # flip up-down
 
-        boxes, confs, clss = trt_yolo.detect(img, 0.75)
+        boxes, confs, clss = trt_yolo.detect(img, 0.8)
         print("boxes:", boxes)
         print("confs:", confs)
         print("clss:", clss)
